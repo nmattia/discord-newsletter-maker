@@ -32,12 +32,13 @@ Makery'. Read chat excerpts that contain shared links and their descriptions.
   about each link, anything you can gather from its description and the messages in the
   context. Don't say things you aren't sure about, but do try to make it a bit less dry
   than just a link description.
+- Include credit for who shared the link using the provided username (e.g., "Posted by username").
 - Do not include a header, footer, or anything else apart from the list of links.
 - Give the links the following structure:
   <li>
     <strong>Title with proper case</strong>
     <p>Description sentences/paragraphs.</p>
-    <a href="https://link/to/the/page">https://link/to/the/page</a>
+    <a href="https://link/to/the/page">https://link/to/the/page</a> <span class="poster">by Stavros.</span>
   </li>
 
 """.strip()
@@ -72,8 +73,9 @@ def render_contexts(contexts: Sequence[dict]) -> str:
 
         for link in context.get("links") or []:
             url = link.get("url") or ""
+            posted_by = link.get("posted_by") or "Unknown"
             if url:
-                lines.append(f"    [link] {url}")
+                lines.append(f"    [link] {url} (posted by {posted_by})")
             description = link.get("description") or ""
             if description:
                 lines.append(f"    [description] {description}")

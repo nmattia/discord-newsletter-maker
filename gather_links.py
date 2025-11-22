@@ -185,13 +185,20 @@ def process_json_file(
     blocks: List[dict] = []
     for context, link_message in iter_contexts(messages):
         timestamp = link_message.get("timestamp") or "unknown time"
+        link_author = format_message(link_message)["author"]
         links = []
         seen_links: set[str] = set()
         for link in LINK_RE.findall(link_message.get("content") or ""):
             if link in seen_links:
                 continue
             seen_links.add(link)
-            links.append({"url": link, "description": fetch_preview(link)})
+            links.append(
+                {
+                    "url": link,
+                    "description": fetch_preview(link),
+                    "posted_by": link_author,
+                }
+            )
 
         blocks.append(
             {
