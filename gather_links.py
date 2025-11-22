@@ -146,13 +146,14 @@ def format_message(message: dict) -> dict:
     }
 
 
-def iter_contexts(messages: Sequence[dict]) -> Iterable[List[dict]]:
-    """Yield slices containing the previous 10 messages plus the link message."""
+def iter_contexts(messages: Sequence[dict]) -> Iterable[tuple[List[dict], dict]]:
+    """Yield slices with 10 messages before and after the link message, plus the link message."""
     for idx, message in enumerate(messages):
         if not message_has_link(message):
             continue
         start = max(0, idx - 10)
-        yield messages[start : idx + 1]
+        end = min(len(messages), idx + 11)
+        yield messages[start:end], message
 
 
 def parse_timestamp(timestamp: Optional[str]) -> Optional[datetime]:
@@ -182,8 +183,7 @@ def process_json_file(
     record_bounds(messages)
 
     blocks: List[dict] = []
-    for context in iter_contexts(messages):
-        link_message = context[-1]
+    for context, link_message in iter_contexts(messages):
         timestamp = link_message.get("timestamp") or "unknown time"
         links = []
         seen_links: set[str] = set()
@@ -209,7 +209,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description=(
             "Find messages containing links in exported Discord JSON files and "
-            "write them with the 10 preceding messages."
+            "write them with the 10 preceding and following messages."
         )
     )
     parser.add_argument(
