@@ -3,6 +3,7 @@
 # requires-python = ">=3.13"
 # dependencies = [
 #   "requests",
+#   "beautifulsoup4",
 # ]
 # ///
 
@@ -14,6 +15,7 @@ from html.parser import HTMLParser
 from typing import Dict, Iterable, List, Optional, Sequence
 
 import requests
+from bs4 import BeautifulSoup
 
 USER_AGENT = "discord-newsletter-fetcher/0.1 (+https://example.invalid)"
 LINK_RE = re.compile(r"https?://\S+")
@@ -49,6 +51,15 @@ class MetaParser(HTMLParser):
             self._title_chunks.append(data)
 
 
+def extract_text(html: str) -> str:
+    """Collect visible text content using BeautifulSoup for robustness."""
+    soup = BeautifulSoup(html, "html.parser")
+    for tag in soup(["script", "style", "noscript"]):
+        tag.decompose()
+    text = soup.get_text(" ", strip=True)
+    return " ".join(text.split())
+
+
 class LinkPreviewer:
     """Fetch link metadata once and cache results."""
 
@@ -76,19 +87,26 @@ class LinkPreviewer:
             self.cache[url] = None
             return None
 
-        parser = MetaParser()
+        meta_parser = MetaParser()
         try:
-            parser.feed(response.text)
+            meta_parser.feed(response.text)
         except Exception:
             print(f"[fetch] parse error: {url}")
             self.cache[url] = None
             return None
 
-        description = self._best_description(parser.meta)
+        try:
+            description = extract_text(response.text)
+        except Exception:
+            print(f"[fetch] text parse error: {url}")
+            description = None
+
+        if not description:
+            description = self._best_description(meta_parser.meta)
         if description:
-            description = self._trim(description)
-        self.cache[url] = description
-        print(f"[fetch] description: {description or 'None'}")
+            description = self._normalize(description)
+        self.cache[url] = description or None
+        print(f"[fetch] description length: {len(description) if description else 0}")
         return description
 
     @staticmethod
@@ -106,11 +124,8 @@ class LinkPreviewer:
         return None
 
     @staticmethod
-    def _trim(text: str, limit: int = 240) -> str:
-        cleaned = " ".join(text.split())
-        if len(cleaned) <= limit:
-            return cleaned
-        return cleaned[: limit - 1].rstrip() + "…"
+    def _normalize(text: str) -> str:
+        return " ".join(text.split())
 
 
 def message_has_link(message: dict) -> bool:
@@ -119,26 +134,15 @@ def message_has_link(message: dict) -> bool:
     return bool(LINK_RE.search(content))
 
 
-def format_message(message: dict, fetch_preview) -> List[str]:
-    """Format a message as lines prefixed with the username, adding link previews."""
+def format_message(message: dict) -> dict:
+    """Normalize a message structure for downstream use."""
     author = message.get("author") or {}
     username = author.get("nickname") or author.get("name") or "Unknown"
-    content = message.get("content") or ""
-    lines = content.splitlines() or [""]
-    formatted = [f"{username}: {lines[0]}"]
-    for line in lines[1:]:
-        formatted.append(f"    {line}")
-
-    seen_links = set()
-    for link in LINK_RE.findall(content):
-        if link in seen_links:
-            continue
-        seen_links.add(link)
-        description = fetch_preview(link)
-        if description:
-            formatted.append(f"    [preview] {description}")
-
-    return formatted
+    return {
+        "author": username,
+        "content": message.get("content") or "",
+        "timestamp": message.get("timestamp") or None,
+    }
 
 
 def iter_contexts(messages: Sequence[dict]) -> Iterable[List[dict]]:
@@ -150,7 +154,7 @@ def iter_contexts(messages: Sequence[dict]) -> Iterable[List[dict]]:
         yield messages[start : idx + 1]
 
 
-def process_json_file(path: Path, fetch_preview) -> List[str]:
+def process_json_file(path: Path, fetch_preview) -> List[dict]:
     data = json.loads(path.read_text(encoding="utf-8"))
     messages = data.get("messages") or []
     if not messages:
@@ -158,14 +162,26 @@ def process_json_file(path: Path, fetch_preview) -> List[str]:
 
     messages = sorted(messages, key=lambda m: m.get("timestamp") or "")
 
-    blocks: List[str] = []
+    blocks: List[dict] = []
     for context in iter_contexts(messages):
         link_message = context[-1]
         timestamp = link_message.get("timestamp") or "unknown time"
-        blocks.append(f"=== {path.name} @ {timestamp} ===")
-        for message in context:
-            blocks.extend(format_message(message, fetch_preview))
-        blocks.append("")  # blank line between blocks
+        links = []
+        seen_links: set[str] = set()
+        for link in LINK_RE.findall(link_message.get("content") or ""):
+            if link in seen_links:
+                continue
+            seen_links.add(link)
+            links.append({"url": link, "description": fetch_preview(link)})
+
+        blocks.append(
+            {
+                "source": path.name,
+                "timestamp": timestamp,
+                "messages": [format_message(message) for message in context],
+                "links": links,
+            }
+        )
 
     return blocks
 
@@ -185,19 +201,22 @@ def main() -> None:
     )
     parser.add_argument(
         "--output",
-        default="messages_with_links.txt",
+        default="messages_with_links.json",
         type=Path,
-        help="Path to the output text file.",
+        help="Path to the output JSON file.",
     )
     args = parser.parse_args()
 
     previewer = LinkPreviewer()
 
-    output_lines: List[str] = []
+    contexts: List[dict] = []
     for path in sorted(args.out_dir.glob("*.json")):
-        output_lines.extend(process_json_file(path, previewer.fetch))
+        contexts.extend(process_json_file(path, previewer.fetch))
 
-    args.output.write_text("\n".join(output_lines), encoding="utf-8")
+    payload = {"contexts": contexts}
+    args.output.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 out/
-messages_with_links.txt
+messages_with_links.json
 .envrc
 __pycache__/
 *.swp

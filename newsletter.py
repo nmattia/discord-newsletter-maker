@@ -10,7 +10,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import re
 from pathlib import Path
 from typing import List
 from typing import Sequence
@@ -20,8 +19,6 @@ from openai import APIError
 from openai import APITimeoutError
 from openai import AuthenticationError
 from openai import OpenAI
-
-LINK_RE = re.compile(r"https?://\S+")
 
 SYSTEM_PROMPT = """
 You are a newsletter editor for the newsletter of a maker community called 'The
@@ -46,17 +43,44 @@ Makery'. Read chat excerpts that contain shared links and their descriptions.
 """.strip()
 
 
-def extract_link_sections(text: str) -> str:
-    """Keep only lines that mention links plus nearby context."""
-    lines = text.splitlines()
-    keep: List[str] = []
-    for idx, line in enumerate(lines):
-        if LINK_RE.search(line):
-            window_start = max(0, idx - 2)
-            window_end = min(len(lines), idx + 3)
-            keep.extend(lines[window_start:window_end])
-            keep.append("")  # spacer between link blocks
-    return "\n".join(keep).strip()
+def load_contexts(path: Path) -> List[dict]:
+    """Load gathered link contexts from a JSON file."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    contexts = data.get("contexts") if isinstance(data, dict) else None
+    if contexts is None and isinstance(data, list):
+        contexts = data
+    if not isinstance(contexts, list):
+        raise SystemExit("Input JSON must include a 'contexts' array.")
+    return contexts
+
+
+def render_contexts(contexts: Sequence[dict]) -> str:
+    """Turn structured contexts into a text prompt for the model."""
+    lines: List[str] = []
+    for context in contexts:
+        source = context.get("source") or "unknown file"
+        timestamp = context.get("timestamp") or "unknown time"
+        lines.append(f"=== {source} @ {timestamp} ===")
+
+        for message in context.get("messages") or []:
+            author = message.get("author") or "Unknown"
+            content = message.get("content") or ""
+            message_lines = content.splitlines() or [""]
+            lines.append(f"{author}: {message_lines[0]}")
+            for line in message_lines[1:]:
+                lines.append(f"    {line}")
+
+        for link in context.get("links") or []:
+            url = link.get("url") or ""
+            if url:
+                lines.append(f"    [link] {url}")
+            description = link.get("description") or ""
+            if description:
+                lines.append(f"    [description] {description}")
+
+        lines.append("")
+
+    return "\n".join(lines).strip()
 
 
 def run_completion(client: OpenAI, model: str, context: str, temperature: float) -> str:
@@ -84,7 +108,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     parser.add_argument(
         "input",
         type=Path,
-        help="Path to the text file containing the gathered messages with links.",
+        help="Path to the JSON file containing the gathered messages with links.",
     )
     parser.add_argument(
         "--model",
@@ -110,8 +134,10 @@ def main(argv: Sequence[str] | None = None) -> None:
             "Missing OpenAI API key. Set OPENAI_API_KEY or pass --api-key."
         )
 
-    raw_text = args.input.read_text(encoding="utf-8")
-    context = extract_link_sections(raw_text) or raw_text
+    contexts = load_contexts(args.input)
+    if not contexts:
+        raise SystemExit("No link contexts found in input JSON.")
+    context = render_contexts(contexts)
 
     client = OpenAI(api_key=api_key)
 
