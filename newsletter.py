@@ -5,16 +5,20 @@
 #   "openai",
 # ]
 # ///
-
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 from pathlib import Path
-from typing import List, Sequence
+from typing import List
+from typing import Sequence
 
-from openai import APIConnectionError, APIError, APITimeoutError, AuthenticationError
+from openai import APIConnectionError
+from openai import APIError
+from openai import APITimeoutError
+from openai import AuthenticationError
 from openai import OpenAI
 
 LINK_RE = re.compile(r"https?://\S+")
@@ -27,14 +31,17 @@ Makery'. Read chat excerpts that contain shared links and their descriptions.
 - Drop broken or spammy links.
 - Group related links together and keep things concise. Feel free to put the
   links in whatever order makes the most sense.
-- Return Markdown with a short title and bullets. Do mention a few words about
-  each link, anything you can gather from its description and the messages in
-  the context. Don't say things you aren't sure about, but do try to make it a
-  bit less dry than just a link description.
+- Return an HTML list (ul.link-list > li) with a short title and bullets. Do mention a few words
+  about each link, anything you can gather from its description and the messages in the
+  context. Don't say things you aren't sure about, but do try to make it a bit less dry
+  than just a link description.
+- Do not include a header, footer, or anything else apart from the list of links.
 - Give the links the following structure:
-  - **Bold title with proper case**
-    Description sentences.
-    https://link/to/the/page
+  <li>
+    <strong>Title with proper case</strong>
+    <p>Description sentences/paragraphs.</p>
+    <a href="https://link/to/the/page">https://link/to/the/page</a>
+  </li>
 
 """.strip()
 
@@ -52,9 +59,7 @@ def extract_link_sections(text: str) -> str:
     return "\n".join(keep).strip()
 
 
-def run_completion(
-    client: OpenAI, model: str, context: str, temperature: float
-) -> str:
+def run_completion(client: OpenAI, model: str, context: str, temperature: float) -> str:
     response = client.chat.completions.create(
         model=model,
         temperature=temperature,
@@ -84,7 +89,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     parser.add_argument(
         "--model",
         default="gpt-5.1",
-        help="OpenAI chat model to use (default: gpt-4o-mini).",
+        help="OpenAI chat model to use (default: gpt-5.1).",
     )
     parser.add_argument(
         "--temperature",
@@ -101,7 +106,9 @@ def main(argv: Sequence[str] | None = None) -> None:
 
     api_key = args.api_key or os.getenv("OPENAI_API_KEY")
     if not api_key:
-        raise SystemExit("Missing OpenAI API key. Set OPENAI_API_KEY or pass --api-key.")
+        raise SystemExit(
+            "Missing OpenAI API key. Set OPENAI_API_KEY or pass --api-key."
+        )
 
     raw_text = args.input.read_text(encoding="utf-8")
     context = extract_link_sections(raw_text) or raw_text
@@ -121,6 +128,8 @@ def main(argv: Sequence[str] | None = None) -> None:
     if not newsletter:
         raise SystemExit("Model returned an empty newsletter.")
 
+    output = json.dumps({"LINK_CONTENT": newsletter})
+    Path("newsletter_context.json").write_text(output, encoding="utf-8")
     print(newsletter)
 
 

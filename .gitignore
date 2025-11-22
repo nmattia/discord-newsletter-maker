@@ -4,3 +4,4 @@ messages_with_links.txt
 __pycache__/
 *.swp
 newsletter.md
+newsletter_context.json
