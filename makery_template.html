@@ -18,7 +18,7 @@
         .email-wrapper {
             width: 100%;
             border-collapse: collapse;
-            background-color: #F5F2EB;
+            background-color: #ffffff;
         }
 
         .email-wrapper-cell {
@@ -30,12 +30,24 @@
             width: 100%;
             border-collapse: collapse;
             background-color: #F5F2EB;
-            border-radius: 8px;
+            border: 1px solid #E2DFD6;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
 
         .header-cell {
-            padding: 30px 25px;
+            padding: 0 25px 30px 25px;
             text-align: center;
+        }
+
+        .logo-container {
+            background-color: #f4f1e2;
+            padding: 25px 0 20px 0;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            width: 100px;
+            height: 100px;
         }
 
         .color-bar-table {
@@ -141,11 +153,13 @@
 
         .cta-table {
             margin: 0 auto;
+            border: none;
         }
 
         .cta-button-cell {
             border-radius: 6px;
             background-color: #5B9AA9;
+            border: none;
         }
 
         .cta-button {
@@ -156,6 +170,7 @@
             font-size: 15px;
             font-weight: 600;
             border-radius: 6px;
+            border: none;
         }
 
         .footer-cell {
@@ -220,6 +235,13 @@
             <td align="center" class="email-wrapper-cell">
                 <!-- Main content container -->
                 <table role="presentation" class="content-container">
+                    <!-- Logo -->
+                    <tr>
+                        <td align="center" class="logo-container">
+                            <img src="https://www.themakery.cc/static/images/favicon/favicon.svg" alt="The Makery" class="logo">
+                        </td>
+                    </tr>
+
                     <!-- Header -->
                     <tr>
                         <td class="header-cell">
