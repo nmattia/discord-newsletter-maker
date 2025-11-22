@@ -7,6 +7,162 @@
     <meta name="supported-color-schemes" content="light only">
     <title>The Makery - Links roundup</title>
     <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #F5F2EB;
+            color: #2D3748;
+        }
+
+        .email-wrapper {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #F5F2EB;
+        }
+
+        .email-wrapper-cell {
+            padding: 20px 10px;
+        }
+
+        .content-container {
+            max-width: 600px;
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #F5F2EB;
+            border-radius: 8px;
+        }
+
+        .header-cell {
+            padding: 30px 25px;
+            text-align: center;
+        }
+
+        .color-bar-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .color-bar-table-footer {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        .color-bar-purple {
+            height: 6px;
+            background-color: #9B8AA5;
+            border-radius: 3px 0 0 3px;
+        }
+
+        .color-bar-pink {
+            height: 6px;
+            background-color: #E8847C;
+        }
+
+        .color-bar-orange {
+            height: 6px;
+            background-color: #F5A962;
+        }
+
+        .color-bar-teal {
+            height: 6px;
+            background-color: #5B9AA9;
+            border-radius: 0 3px 3px 0;
+        }
+
+        .color-bar-purple-footer {
+            height: 4px;
+            background-color: #9B8AA5;
+            border-radius: 2px 0 0 2px;
+        }
+
+        .color-bar-pink-footer {
+            height: 4px;
+            background-color: #E8847C;
+        }
+
+        .color-bar-orange-footer {
+            height: 4px;
+            background-color: #F5A962;
+        }
+
+        .color-bar-teal-footer {
+            height: 4px;
+            background-color: #5B9AA9;
+            border-radius: 0 2px 2px 0;
+        }
+
+        .title {
+            margin: 0;
+            color: #2D3748;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            margin: 10px 0 0 0;
+            color: #666;
+            font-size: 15px;
+        }
+
+        .greeting-cell {
+            padding: 10px 25px 10px 25px;
+        }
+
+        .greeting {
+            margin: 0;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #2D3748;
+        }
+
+        .intro-cell {
+            padding: 5px 25px 25px 25px;
+        }
+
+        .intro {
+            margin: 0;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #555;
+        }
+
+        .links-cell {
+            padding: 0 25px 25px 25px;
+        }
+
+        .cta-cell {
+            padding: 0 25px 25px 25px;
+            text-align: center;
+        }
+
+        .cta-table {
+            margin: 0 auto;
+        }
+
+        .cta-button-cell {
+            border-radius: 6px;
+            background-color: #5B9AA9;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 14px 32px;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 6px;
+        }
+
+        .footer-cell {
+            padding: 20px 25px;
+            text-align: center;
+        }
+
         .link-list {
             list-style: none;
             padding: 0;
@@ -19,22 +175,6 @@
             border-left: 4px solid #9B8AA5;
             padding: 15px 18px;
             margin-bottom: 12px;
-        }
-
-        .link-list li:nth-child(4n+1) {
-            border-left-color: #9B8AA5;
-        }
-
-        .link-list li:nth-child(4n+2) {
-            border-left-color: #E8847C;
-        }
-
-        .link-list li:nth-child(4n+3) {
-            border-left-color: #F5A962;
-        }
-
-        .link-list li:nth-child(4n) {
-            border-left-color: #5B9AA9;
         }
 
         .link-list li:last-child {
@@ -73,34 +213,34 @@
         }
     </style>
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #F5F2EB; color: #2D3748;">
+<body>
     <!-- Email wrapper -->
-    <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #F5F2EB;">
+    <table role="presentation" class="email-wrapper">
         <tr>
-            <td align="center" style="padding: 20px 10px;">
+            <td align="center" class="email-wrapper-cell">
                 <!-- Main content container -->
-                <table role="presentation" style="max-width: 600px; width: 100%; border-collapse: collapse; background-color: #F5F2EB; border-radius: 8px;">
+                <table role="presentation" class="content-container">
                     <!-- Header -->
                     <tr>
-                        <td style="padding: 30px 25px; text-align: center;">
+                        <td class="header-cell">
                             <!-- Color bar matching the M logo colors -->
-                            <table role="presentation" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                            <table role="presentation" class="color-bar-table">
                                 <tr>
-                                    <td style="height: 6px; background-color: #9B8AA5; border-radius: 3px 0 0 3px;"></td>
-                                    <td style="height: 6px; background-color: #E8847C;"></td>
-                                    <td style="height: 6px; background-color: #F5A962;"></td>
-                                    <td style="height: 6px; background-color: #5B9AA9; border-radius: 0 3px 3px 0;"></td>
+                                    <td class="color-bar-purple"></td>
+                                    <td class="color-bar-pink"></td>
+                                    <td class="color-bar-orange"></td>
+                                    <td class="color-bar-teal"></td>
                                 </tr>
                             </table>
-                            <h1 style="margin: 0; color: #2D3748; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">The Makery</h1>
-                            <p style="margin: 10px 0 0 0; color: #666; font-size: 15px;">What we've been talking about.</p>
+                            <h1 class="title">The Makery</h1>
+                            <p class="subtitle">What we've been talking about.</p>
                         </td>
                     </tr>
 
                     <!-- Greeting -->
                     <tr>
-                        <td style="padding: 10px 25px 10px 25px;">
-                            <p style="margin: 0; font-size: 16px; line-height: 1.6; color: #2D3748;">
+                        <td class="greeting-cell">
+                            <p class="greeting">
                                 Hello!
                             </p>
                         </td>
@@ -108,8 +248,8 @@
 
                     <!-- Intro text -->
                     <tr>
-                        <td style="padding: 5px 25px 25px 25px;">
-                            <p style="margin: 0; font-size: 16px; line-height: 1.6; color: #555;">
+                        <td class="intro-cell">
+                            <p class="intro">
                                 Here's what we've been talking about on Discord lately:
                             </p>
                         </td>
@@ -117,18 +257,18 @@
 
                     <!-- Links section -->
                     <tr>
-                        <td style="padding: 0 25px 25px 25px;">
+                        <td class="links-cell">
                             {{ LINK_CONTENT }}
                         </td>
                     </tr>
 
                     <!-- Discord CTA -->
                     <tr>
-                        <td style="padding: 0 25px 25px 25px; text-align: center;">
-                            <table role="presentation" style="margin: 0 auto;">
+                        <td class="cta-cell">
+                            <table role="presentation" class="cta-table">
                                 <tr>
-                                    <td style="border-radius: 6px; background-color: #5B9AA9;">
-                                        <a href="https://discord.gg/vFZd3CASmX" style="display: inline-block; padding: 14px 32px; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 600; border-radius: 6px;">
+                                    <td class="cta-button-cell">
+                                        <a href="https://discord.gg/vFZd3CASmX" class="cta-button">
                                             Join the conversation on Discord
                                         </a>
                                     </td>
@@ -139,14 +279,14 @@
 
                     <!-- Footer -->
                     <tr>
-                        <td style="padding: 20px 25px; text-align: center;">
+                        <td class="footer-cell">
                             <!-- Color bar -->
-                            <table role="presentation" style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+                            <table role="presentation" class="color-bar-table-footer">
                                 <tr>
-                                    <td style="height: 4px; background-color: #9B8AA5; border-radius: 2px 0 0 2px;"></td>
-                                    <td style="height: 4px; background-color: #E8847C;"></td>
-                                    <td style="height: 4px; background-color: #F5A962;"></td>
-                                    <td style="height: 4px; background-color: #5B9AA9; border-radius: 0 2px 2px 0;"></td>
+                                    <td class="color-bar-purple-footer"></td>
+                                    <td class="color-bar-pink-footer"></td>
+                                    <td class="color-bar-orange-footer"></td>
+                                    <td class="color-bar-teal-footer"></td>
                                 </tr>
                             </table>
                         </td>

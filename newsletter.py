@@ -16,6 +16,7 @@ from typing import List, Sequence
 
 from pydantic import BaseModel, ValidationError
 
+from models import NewsletterLink, NewsletterPayload
 from openai import APIConnectionError
 from openai import APIError
 from openai import APITimeoutError
@@ -28,12 +29,11 @@ Makery'. Read chat excerpts that contain shared links and their descriptions.
 
 - Decide which links are worth including (educational, insightful, noteworthy).
 - Drop broken or spammy links.
-- Group related links together and keep things concise. Feel free to put the
-  links in whatever order makes the most sense.
+- Keep things concise. Feel free to put the links in whatever order makes the
+  most sense.
 - Each link is labeled with a number in the context: reference links by their
   number in your output as `link_number`.
-- Populate the structured fields: title, description, link_number, and an optional
-  group for related links.
+- Populate the structured fields: title, description, and link_number.
 - Do not include URLs or usernames in your output; we will attach them using the
   link number you provide.
 - Use the supplied username for context (fall back to "Unknown" if missing).
@@ -46,23 +46,10 @@ class LLMNewsletterLink(BaseModel):
     title: str
     description: str
     link_number: int
-    group: str | None = None
 
 
 class LLMNewsletterPayload(BaseModel):
     links: List[LLMNewsletterLink]
-
-
-class NewsletterLink(BaseModel):
-    title: str
-    description: str
-    url: str
-    posted_by: str
-    group: str | None = None
-
-
-class NewsletterPayload(BaseModel):
-    links: List[NewsletterLink]
 
 
 def load_contexts(path: Path) -> List[dict]:
@@ -160,38 +147,9 @@ def attach_link_metadata(
                 description=link.description,
                 url=source.get("url") or "",
                 posted_by=source.get("posted_by") or "Unknown",
-                group=link.group,
             )
         )
     return NewsletterPayload(links=links)
-
-
-def extract_json_content(content: str) -> str:
-    """Pull the JSON object out of the model response (handles fenced blocks)."""
-    text = content.strip()
-    if "```" in text:
-        for block in text.split("```"):
-            candidate = block.strip()
-            if candidate.startswith("{") and candidate.endswith("}"):
-                return candidate
-    return text
-
-
-def render_newsletter(payload: NewsletterPayload) -> str:
-    """Render the structured links into the final HTML snippet."""
-    lines: List[str] = ['<ul class="link-list">']
-    for link in payload.links:
-        lines.extend(
-            [
-                "  <li>",
-                f"    <strong>{link.title}</strong>",
-                f'    <p>{link.description} — <span class="poster">{link.posted_by}</span></p>',
-                f'    <a href="{link.url}">{link.url}</a>',
-                "  </li>",
-            ]
-        )
-    lines.append("</ul>")
-    return "\n".join(lines)
 
 
 def main(argv: Sequence[str] | None = None) -> None:
@@ -245,11 +203,10 @@ def main(argv: Sequence[str] | None = None) -> None:
         raise SystemExit(f"OpenAI API error: {exc}") from exc
 
     payload = attach_link_metadata(llm_payload, link_lookup)
-    newsletter = render_newsletter(payload)
 
-    output = json.dumps({"LINK_CONTENT": newsletter})
-    Path("newsletter_context.json").write_text(output, encoding="utf-8")
-    print(newsletter)
+    output = payload.model_dump_json(indent=2)
+    Path("curated_links.json").write_text(output, encoding="utf-8")
+    print(f"Wrote {len(payload.links)} links to curated_links.json")
 
 
 if __name__ == "__main__":

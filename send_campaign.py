@@ -2,6 +2,8 @@
 # /// script
 # requires-python = ">=3.13"
 # dependencies = [
+#   "css-inline",
+#   "pydantic",
 #   "requests",
 # ]
 # ///
@@ -13,9 +15,12 @@ import os
 import re
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, List
 
+import css_inline
 import requests
+
+from models import NewsletterLink, NewsletterPayload
 
 
 def parse_args() -> argparse.Namespace:
@@ -104,24 +109,42 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def load_variables() -> dict[str, Any]:
-    """Load JSON variables from newsletter_context.json."""
+BORDER_COLORS = ["#9B8AA5", "#E8847C", "#F5A962", "#5B9AA9"]
 
-    context_path = Path("newsletter_context.json")
+
+def load_curated_links() -> NewsletterPayload:
+    """Load curated links from curated_links.json."""
+
+    context_path = Path("curated_links.json")
     try:
         content = context_path.read_text(encoding="utf-8")
     except FileNotFoundError:
-        raise SystemExit(f"Context file not found: {context_path}")
+        raise SystemExit(f"Curated links file not found: {context_path}")
 
     try:
-        variables = json.loads(content)
+        data = json.loads(content)
     except json.JSONDecodeError as exc:
         raise SystemExit(f"Invalid JSON in {context_path}: {exc}") from exc
 
-    if not isinstance(variables, dict):
-        raise SystemExit("Variables JSON must be an object of key/value pairs.")
+    return NewsletterPayload.model_validate(data)
 
-    return variables
+
+def render_newsletter(payload: NewsletterPayload) -> str:
+    """Render the curated links into an HTML snippet."""
+    lines: List[str] = ['<ul class="link-list">']
+    for index, link in enumerate(payload.links):
+        border_color = BORDER_COLORS[index % len(BORDER_COLORS)]
+        lines.extend(
+            [
+                f'  <li style="border-left-color: {border_color};">',
+                f"    <strong>{link.title}</strong>",
+                f'    <p>{link.description} — <span class="poster">{link.posted_by}</span></p>',
+                f'    <a href="{link.url}">{link.url}</a>',
+                "  </li>",
+            ]
+        )
+    lines.append("</ul>")
+    return "\n".join(lines)
 
 
 def render_template(template_path: Path, variables: dict[str, Any]) -> str:
@@ -234,8 +257,11 @@ def main():
             "Username and password are required. Provide them via CLI or environment."
         )
 
-    variables = load_variables()
+    payload = load_curated_links()
+    link_content = render_newsletter(payload)
+    variables = {"LINK_CONTENT": link_content}
     body = render_template(args.template, variables)
+    body = css_inline.inline(body)
 
     if args.show_body:
         print(body)
